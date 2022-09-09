@@ -46,7 +46,7 @@ ol {
 
 .load-more {
   display: block;
-  margin: 0 auto;
+  margin: 20px auto;
 }
 
 .gallery {
@@ -78,6 +78,6 @@ ol {
   font-size: 12px;
 }
 
-.button.is-hidden {
+.load-more.is-hidden {
   display: none;
 }
