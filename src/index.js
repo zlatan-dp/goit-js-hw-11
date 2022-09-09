@@ -94,7 +94,7 @@ function renderPics(pics) {
   const markup = pics.hits
     .map(pic => {
       return `<div class="photo-card">
-  <img src="${pic.webformatURL}" alt="" loading="lazy" />
+  <img src="${pic.webformatURL}" alt="${pic.tags}" loading="lazy" />
   <div class="info">
     <p class="info-item">
       <b>Likes</b> </br>${pic.likes}
