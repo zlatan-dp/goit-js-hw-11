@@ -49,4 +49,8 @@ export default class PicsApiService {
   set query(newQuery) {
     this.searchQuery = newQuery;
   }
+
+  get pages() {
+    return this.page;
+  }
 }

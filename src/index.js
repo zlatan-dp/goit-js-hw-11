@@ -1,5 +1,9 @@
 import PicsApiService from './js/pics-service';
 import { Notify } from 'notiflix';
+import { Loading } from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+import throttle from 'lodash.throttle';
 
 const picApiService = new PicsApiService();
 
@@ -30,10 +34,19 @@ async function onSearch(evt) {
         'Sorry, there are no images matching your search query. Please try again.'
       );
     }
+    // Loading.standard('Loading...', {
+    //   svgSize: '60px',
+    //   backgroundColor: 'rgba(0,0,0,0.5)',
+    // });
+
     clearPicsGallery();
     renderPics(pics);
-    refs.loadMoreBtn.classList.remove('is-hidden');
+    lightbox.refresh();
     Notify.success(`Hooray! We found ${pics.totalHits} totalHits images.`);
+    if (pics.totalHits > 40) {
+      refs.loadMoreBtn.classList.remove('is-hidden');
+    }
+    //Loading.remove();
   } catch (error) {
     console.error(error);
   }
@@ -66,13 +79,20 @@ async function onSearch(evt) {
 async function onLoadMore() {
   try {
     const pics = await picApiService.getPics();
-    if (pics.hits.length === 0) {
+
+    /* if (pics.hits.length === 0) {
       refs.loadMoreBtn.classList.add('is-hidden');
       return Notify.warning(
         "We're sorry, but you've reached the end of search results."
       );
-    }
+    } */
     renderPics(pics);
+    lightbox.refresh();
+
+    if (pics.totalHits < (picApiService.pages - 1) * 40) {
+      onFinishPage();
+    }
+    //console.log(picApiService.pages);
   } catch (error) {
     console.error(error);
   }
@@ -93,7 +113,8 @@ async function onLoadMore() {
 function renderPics(pics) {
   const markup = pics.hits
     .map(pic => {
-      return `<div class="photo-card">
+      return `<a href="${pic.largeImageURL}" class="photo-card">
+      
   <img src="${pic.webformatURL}" alt="${pic.tags}" loading="lazy" />
   <div class="info">
     <p class="info-item">
@@ -109,7 +130,8 @@ function renderPics(pics) {
       <b>Downloads</b> </br>${pic.downloads}
     </p>
   </div>
-</div>`;
+
+</a>`;
     })
     .join('');
   refs.galleryContainer.insertAdjacentHTML('beforeend', markup);
@@ -117,4 +139,37 @@ function renderPics(pics) {
 
 function clearPicsGallery() {
   refs.galleryContainer.innerHTML = '';
+}
+
+var lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+});
+
+refs.galleryContainer.addEventListener('click', lightbox);
+
+function onFinishPage() {
+  document.addEventListener('scroll', throttle(finishPage, 300));
+
+  function finishPage() {
+    //высотa всей страницы
+    var scrollHeight = document.documentElement.scrollHeight;
+    var clientHeight = document.documentElement.clientHeight;
+
+    //высота прокрутки
+    var scrollTop =
+      window.pageYOffset ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop;
+
+    // console.log(scrollHeight - scrollTop);
+    // console.log(clientHeight);
+
+    if (scrollHeight - scrollTop == clientHeight) {
+      refs.loadMoreBtn.classList.add('is-hidden');
+      Notify.warning(
+        "We're sorry, but you've reached the end of search results."
+      );
+    }
+  }
 }
